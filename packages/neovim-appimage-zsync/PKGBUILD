@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034,SC2154  # Disabled for PKGBUILD variables.
+
+# Maintainer: Jarrett Aiken <jarrett.aiken@achl.fr>
+# Template: https://daveparrish.net/posts/2019-11-16-Better-AppImage-PKGBUILD-template.html
+
+_pkgname="neovim"
+_execname="nvim"
+_appimage="${_execname}.appimage"
+_desktop="${_execname}.desktop"
+
+pkgname="${_pkgname}-appimage-zsync"
+pkgver=0.7.2
+pkgrel=1
+pkgdesc="Fork of Vim aiming to improve user experience, plugins, and GUIs."
+arch=("x86_64")
+url="https://neovim.io"
+license=("custom:neovim")
+depends=("fuse2")
+makedepends=("zsync2")
+provides=("neovim" "vim-plugin-runtime")
+conflicts=("${_pkgname}")
+options=(!strip)
+_source="https://github.com/neovim/${_pkgname}/releases/download/v${pkgver}/"
+_zsync="${_execname}-${pkgver}.zsync"
+source=(
+  "${_zsync}::${_source}${_appimage}.zsync"
+  "https://raw.githubusercontent.com/neovim/${_pkgname}/v${pkgver}/LICENSE.txt"
+)
+noextract=("${_zsync}")
+b2sums=(
+  "97ba718ed8052056582b80561107f9b802b7de3e32d7968255b888f3034b0e696ed63a046c13caa1685a34f02dad0c5bd51daa6c250385d27aeed2b8db4eb4ee"
+  "de07679394ad82b7f56d6d490b8f4832385ca2d92b17c966ebdfe3fd0b1fa1eae2bdbcd653e2cf88021c6e1a27b70de7e2cbadc1ed64ead7862cdb4fe41b0188"
+)
+
+prepare() {
+  zsync2 "${_zsync}" -u "${_source}${_appimage}"
+  chmod +x "${_appimage}"
+  ./"${_appimage}" --appimage-extract
+}
+
+build() {
+  # Adjust .desktop so it will work outside of AppImage container
+  sed -i -E "s|Exec=nvim %F|Exec=/usr/bin/env DESKTOPINTEGRATION=false ${_execname} %F|" \
+    "squashfs-root/${_desktop}"
+
+  # Fix permissions; .AppImage permissions are 700 for all directories
+  chmod -R a-x+rX squashfs-root/usr
+}
+
+package() {
+  # Executable & License
+  install -Dm755 "${srcdir}/${_appimage}" "${pkgdir}/opt/${pkgname}/${_appimage}"
+  install -Dm644 "${srcdir}/LICENSE.txt" "${pkgdir}/opt/${pkgname}/LICENSE.txt"
+
+  # Desktop File and Icons
+  install -dm755 "${pkgdir}/usr/share/"
+  install -Dm644 "${srcdir}/squashfs-root/${_desktop}" \
+    "${pkgdir}/usr/share/applications/${_desktop}"
+  cp -a "${srcdir}/squashfs-root/usr/share/icons" "${pkgdir}/usr/share/"
+
+  # Symlink Executable & License
+  install -dm755 "${pkgdir}/usr/bin"
+  ln -s "/opt/${pkgname}/${_appimage}" "${pkgdir}/usr/bin/${_execname}"
+  install -dm755 "${pkgdir}/usr/share/licenses/${pkgname}/"
+  ln -s "/opt/$pkgname/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname"
+}

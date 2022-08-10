@@ -1,0 +1,20 @@
+pkgbase = neovim-appimage-zsync
+	pkgdesc = Fork of Vim aiming to improve user experience, plugins, and GUIs.
+	pkgver = 0.7.2
+	pkgrel = 1
+	url = https://neovim.io
+	arch = x86_64
+	license = custom:neovim
+	makedepends = zsync2
+	depends = fuse2
+	provides = neovim
+	provides = vim-plugin-runtime
+	conflicts = neovim
+	noextract = nvim-0.7.2.zsync
+	options = !strip
+	source = nvim-0.7.2.zsync::https://github.com/neovim/neovim/releases/download/v0.7.2/nvim.appimage.zsync
+	source = https://raw.githubusercontent.com/neovim/neovim/v0.7.2/LICENSE.txt
+	b2sums = 97ba718ed8052056582b80561107f9b802b7de3e32d7968255b888f3034b0e696ed63a046c13caa1685a34f02dad0c5bd51daa6c250385d27aeed2b8db4eb4ee
+	b2sums = de07679394ad82b7f56d6d490b8f4832385ca2d92b17c966ebdfe3fd0b1fa1eae2bdbcd653e2cf88021c6e1a27b70de7e2cbadc1ed64ead7862cdb4fe41b0188
+
+pkgname = neovim-appimage-zsync
